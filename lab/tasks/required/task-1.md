@@ -57,6 +57,12 @@ sequenceDiagram
     Note right of Developer: Verify: New row matches<br/>the Swagger UI response
 ```
 
+See:
+
+- [`<your-vm-ip-address>`](../../../wiki/vm.md#your-vm-ip-address)
+- [`<caddy-port>`](../../../wiki/caddy.md#caddy-port)
+- [`<pgadmin-port>`](../../../wiki/pgadmin.md#pgadmin-port)
+
 <h4>Table of contents</h4>
 
 - [1. Steps](#1-steps)
