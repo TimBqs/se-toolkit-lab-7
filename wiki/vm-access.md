@@ -174,6 +174,22 @@ Complete these steps:
    ping <your-vm-ip-address>
    ```
 
+   You should see the output like this:
+
+   ```terminal
+   PING 192.0.2.1 (192.0.2.1) 56(84) bytes of data.
+   64 bytes from 192.0.2.1: icmp_seq=1 ttl=62 time=4.40 ms
+   64 bytes from 192.0.2.1: icmp_seq=2 ttl=62 time=5.34 ms
+   64 bytes from 192.0.2.1: icmp_seq=3 ttl=62 time=3.04 ms
+   ...
+   ```
+
+   The lines should continue being printed.
+
+   > <h3>Troubleshooting</h3>
+   >
+   > [`Connection timed out`](#connection-timed-out).
+
 ## Add the VM to the `SSH` config (LOCAL)
 
 1. [Open the file using `code`](./vs-code.md#open-the-file-or-the-directory-using-code):
