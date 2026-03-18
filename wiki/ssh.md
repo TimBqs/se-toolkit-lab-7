@@ -80,6 +80,7 @@ See:
 
 - [`<user>`](./operating-system.md#user-placeholder)
 - [`<host>`](./computer-networks.md#host-placeholder)
+- [`<directory-path>`](./file-system.md#directory-path-placeholder)
 
 > [!NOTE]
 > The `$` at the end indicates a regular user.
