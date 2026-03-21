@@ -19,7 +19,7 @@ class BotSettings(BaseSettings):
     llm_api_base_url: str = ""
 
     class Config:
-        env_file = ".env.bot.secret"
+        env_file = "../.env.bot.secret"
         env_file_encoding = "utf-8"
 
 
