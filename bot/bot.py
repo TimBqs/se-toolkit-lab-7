@@ -2,15 +2,16 @@
 """LMS Telegram Bot - Entry point with --test mode."""
 
 import argparse
+import logging
 import sys
 
-from handlers import (
-    handle_start,
-    handle_help,
-    handle_health,
-    handle_labs,
-    handle_scores,
-)
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command, CommandStart
+from config import settings
+from handlers import (handle_health, handle_help, handle_labs, handle_scores,
+                      handle_start)
+
+logging.basicConfig(level=logging.INFO)
 
 
 def parse_command(text: str) -> tuple[str, str]:
@@ -57,8 +58,43 @@ def main() -> int:
         print(response)
         return 0
 
-    # Telegram mode: start the bot (to be implemented in Task 2)
-    print("Starting bot in Telegram mode... (not yet implemented)")
+    # Telegram mode: start the bot
+    if not settings.bot_token:
+        logging.error("BOT_TOKEN is not set in .env.bot.secret")
+        return 1
+
+    logging.info("Starting bot in Telegram mode...")
+    
+    # Create bot and dispatcher
+    bot = Bot(token=settings.bot_token)
+    dp = Dispatcher()
+
+    # Register handlers
+    @dp.message(CommandStart())
+    async def cmd_start(message: types.Message):
+        await message.answer(handle_start())
+
+    @dp.message(Command("help"))
+    async def cmd_help(message: types.Message):
+        await message.answer(handle_help())
+
+    @dp.message(Command("health"))
+    async def cmd_health(message: types.Message):
+        await message.answer(handle_health())
+
+    @dp.message(Command("labs"))
+    async def cmd_labs(message: types.Message):
+        await message.answer(handle_labs())
+
+    @dp.message(Command("scores"))
+    async def cmd_scores(message: types.Message):
+        # Get args after /scores command
+        args_text = message.text.split(maxsplit=1)
+        args_text = args_text[1] if len(args_text) > 1 else ""
+        await message.answer(handle_scores(args_text))
+
+    # Run polling
+    dp.run_polling(bot)
     return 0
 
 
