@@ -49,7 +49,7 @@ services:
     healthcheck:
       test:
         [
-          "CMD-SHELL",
+          'CMD-SHELL',
           "pg_isready -U ${POSTGRES_USER:?'POSTGRES_USER is required'} -d ${POSTGRES_DB:?'POSTGRES_DB is required'}",
         ]
       interval: 5s
@@ -88,6 +88,23 @@ services:
       - ${LMS_API_HOST_ADDRESS:?'LMS_API_HOST_ADDRESS is required'}:${LMS_API_HOST_PORT:?'LMS_API_HOST_PORT is required'}:${CADDY_CONTAINER_PORT}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    restart: unless-stopped
+    networks:
+      - lms-network
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN:?'BOT_TOKEN is required'}
+      - LMS_API_BASE_URL=http://backend:${BACKEND_CONTAINER_PORT:?'BACKEND_CONTAINER_PORT is required'}
+      - LMS_API_KEY=${LMS_API_KEY:?'LMS_API_KEY is required'}
+      - LLM_API_MODEL=${LLM_API_MODEL:-coder-model}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_API_BASE_URL=${LLM_API_BASE_URL:-}
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
