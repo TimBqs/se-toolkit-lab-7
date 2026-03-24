@@ -95,3 +95,82 @@ By the end of this lab, you should be able to say:
 ### Optional
 
 1. [Flutter Web Chatbot](./lab/tasks/optional/task-1.md)
+
+## Deploy
+
+### Prerequisites
+
+Before deploying, ensure you have the following environment variables set in `.env.docker.secret`:
+
+- `BOT_TOKEN` — Telegram bot token from @BotFather
+- `LMS_API_KEY` — Backend API key
+- `LLM_API_KEY` — LLM API key (for natural language queries)
+- `LLM_API_BASE_URL` — LLM API base URL (optional, for natural language queries)
+
+### Deploy with Docker Compose
+
+1. **Stop any running bot process** (if running with nohup):
+
+   ```bash
+   pkill -f "bot.py" 2>/dev/null
+   ```
+
+2. **Start all services** (backend, postgres, caddy, bot):
+
+   ```bash
+   cd ~/se-toolkit-lab-7
+   docker compose --env-file .env.docker.secret up --build -d
+   ```
+
+3. **Verify services are running**:
+
+   ```bash
+   docker compose --env-file .env.docker.secret ps
+   ```
+
+   You should see `bot` listed alongside `backend`, `postgres`, `pgadmin`, and `caddy`.
+
+4. **Check bot logs**:
+
+   ```bash
+   docker compose --env-file .env.docker.secret logs bot --tail 20
+   ```
+
+   Look for:
+   - "Starting bot in Telegram mode..." — bot started successfully
+   - "HTTP Request: POST .../getUpdates" — bot is polling for messages
+   - No Python tracebacks
+
+### Verify in Telegram
+
+Send these commands to your bot in Telegram:
+
+- `/start` — Should show welcome message with inline keyboard buttons
+- `/health` — Should show backend status
+- `/labs` — Should list available labs
+- `/scores lab-04` — Should show pass rates for Lab 04
+- "what labs are available?" — Should respond with natural language (requires LLM)
+
+### Troubleshooting
+
+**Bot container keeps restarting:**
+
+```bash
+docker compose --env-file .env.docker.secret logs bot
+```
+
+Common causes:
+
+- Missing `BOT_TOKEN` in `.env.docker.secret`
+- Import error in bot code
+- Backend not reachable (check `LMS_API_BASE_URL` is `http://backend:8000`)
+
+**LLM queries fail:**
+
+- Ensure `LLM_API_KEY` and `LLM_API_BASE_URL` are set
+- If using qwen-code-oai-proxy, restart it: `cd ~/qwen-code-oai-proxy && docker compose restart`
+
+**Backend connection refused:**
+
+- In Docker, use service name `backend`, not `localhost`
+- `LMS_API_BASE_URL` should be `http://backend:8000` in docker-compose.yml

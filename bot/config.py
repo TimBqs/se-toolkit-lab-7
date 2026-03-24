@@ -1,5 +1,7 @@
 """Configuration loaded from environment variables."""
 
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
 
 
@@ -19,7 +21,12 @@ class BotSettings(BaseSettings):
     llm_api_base_url: str = ""
 
     class Config:
-        env_file = "../.env.bot.secret"
+        # Look for .env.bot.secret in parent directory (project root)
+        # Works for both local dev (bot/../.env.bot.secret) and Docker (/app/.env.bot.secret)
+        env_file = [
+            str(Path(__file__).parent.parent / ".env.bot.secret"),
+            ".env.bot.secret",
+        ]
         env_file_encoding = "utf-8"
 
 
