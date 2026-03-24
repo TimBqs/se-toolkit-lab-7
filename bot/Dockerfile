@@ -18,5 +18,5 @@ COPY bot/ ./bot/
 # Copy env file for local development (Docker uses env vars from compose)
 COPY .env.bot.secret .env.bot.secret
 
-# Run the bot from /app directory where .env.bot.secret exists
-CMD ["uv", "run", "bot.py"]
+# Run the bot from /app directory
+CMD ["uv", "run", "bot/bot.py"]
