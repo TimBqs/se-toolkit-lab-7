@@ -7,9 +7,11 @@ import sys
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, CommandStart
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from config import settings
 from handlers import (handle_health, handle_help, handle_labs, handle_scores,
                       handle_start)
+from handlers.intent_router import route_intent
 
 logging.basicConfig(level=logging.INFO)
 
@@ -40,6 +42,32 @@ def run_command(command: str, args: str) -> str:
         return f"Unknown command: {command}. Use /help for available commands."
 
 
+def get_main_keyboard() -> InlineKeyboardMarkup:
+    """Create inline keyboard with common actions."""
+    keyboard = [
+        [
+            InlineKeyboardButton(text="🏥 Health", callback_data="health"),
+            InlineKeyboardButton(text="📚 Labs", callback_data="labs"),
+        ],
+        [
+            InlineKeyboardButton(text="📊 Scores", callback_data="scores"),
+            InlineKeyboardButton(text="❓ Help", callback_data="help"),
+        ],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def handle_message(text: str) -> str:
+    """Handle plain text message with LLM intent routing."""
+    # Check if it looks like a command without slash
+    if text.startswith("/"):
+        command, args = parse_command(text)
+        return run_command(command, args)
+    
+    # Use LLM intent router for plain text
+    return route_intent(text)
+
+
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="LMS Telegram Bot")
@@ -53,8 +81,7 @@ def main() -> int:
 
     if args.test:
         # Test mode: call handlers directly
-        command, cmd_args = parse_command(args.test)
-        response = run_command(command, cmd_args)
+        response = handle_message(args.test)
         print(response)
         return 0
 
@@ -64,7 +91,7 @@ def main() -> int:
         return 1
 
     logging.info("Starting bot in Telegram mode...")
-    
+
     # Create bot and dispatcher
     bot = Bot(token=settings.bot_token)
     dp = Dispatcher()
@@ -72,7 +99,7 @@ def main() -> int:
     # Register handlers
     @dp.message(CommandStart())
     async def cmd_start(message: types.Message):
-        await message.answer(handle_start())
+        await message.answer(handle_start(), reply_markup=get_main_keyboard())
 
     @dp.message(Command("help"))
     async def cmd_help(message: types.Message):
@@ -92,6 +119,29 @@ def main() -> int:
         args_text = message.text.split(maxsplit=1)
         args_text = args_text[1] if len(args_text) > 1 else ""
         await message.answer(handle_scores(args_text))
+
+    # Handle callback queries from inline buttons
+    @dp.callback_query(lambda c: c.data)
+    async def process_callback_query(callback_query: types.CallbackQuery):
+        data = callback_query.data
+        if data == "health":
+            response = handle_health()
+        elif data == "labs":
+            response = handle_labs()
+        elif data == "help":
+            response = handle_help()
+        elif data == "scores":
+            response = "Send me a lab number (e.g., 'lab-04') to see scores"
+        else:
+            response = "Unknown action"
+        await callback_query.message.answer(response)
+        await callback_query.answer()
+
+    # Handle plain text messages with LLM intent routing
+    @dp.message()
+    async def handle_text(message: types.Message):
+        response = handle_message(message.text or "")
+        await message.answer(response)
 
     # Run polling
     dp.run_polling(bot)
